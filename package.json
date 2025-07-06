@@ -1,6 +1,6 @@
 {
   "name": "@randajan/pulse",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Lightweight, promise-friendly scheduler that outperforms classic cron for any interval shorter than one month.",
   "repository": "randajan/pulse",
   "type": "module",
