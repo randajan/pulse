@@ -1,0 +1,45 @@
+{
+  "name": "@randajan/pulse",
+  "version": "0.0.1",
+  "description": "Lightweight, promise-friendly scheduler that outperforms classic cron for any interval shorter than one month.",
+  "repository": "randajan/pulse",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@randajan/simple-lib": "^3.2.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "scheduler",
+    "cron",
+    "cron-alternative",
+    "job-scheduling",
+    "interval-timer",
+    "sub-monthly",
+    "promise-friendly",
+    "zero-dependency",
+    "nodejs",
+    "pulse"
+  ],
+  "homepage": "https://github.com/randajan/pulse",
+  "bugs": {
+    "url": "https://github.com/randajan/pulse/issues"
+  },
+  "author": {
+    "name": "Jan Randa",
+    "email": "jnranda@gmail.com",
+    "url": "https://www.linkedin.com/in/randajan/"
+  }
+}
