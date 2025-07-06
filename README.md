@@ -1,138 +1,115 @@
-# @randajan/oauth2-client
+# @randajan/pulse
 
-[![NPM](https://img.shields.io/npm/v/@randajan/oauth2-client.svg)](https://www.npmjs.com/package/@randajan/oauth2-client) 
+
+[![NPM](https://img.shields.io/npm/v/@randajan/pulse.svg)](https://www.npmjs.com/package/@randajan/pulse) 
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+
 
 ---
 
 ## Overview
 
-**@randajan/oauth2-client** is a lightweight wrapper that streamlines OAuth 2.0 and service‑account authentication for Google APIs.  
-It hides the boilerplate around `google-auth-library`, keeps tokens fresh and lets you focus on writing business logic instead of wiring endpoint plumbing.
+**@randajan/pulse** is a tiny, zero‑dependency scheduler that fires your callback at *wall‑clock‑aligned* intervals. It focuses on precision (no drift), clarity and graceful error handling, so you can drive heart‑beat logic, telemetry or background maintenance tasks with just a few lines of code.
 
-This library meticulously supervises the entire redirect flow, intercepts every error, and relays it to the front-end, ensuring the browser is never stranded on a raw JSON API endpoint as can happen with other solutions.
+The package ships dual builds—**ESM** *and* **CommonJS**—and works the same in Node.js and the browser.
 
 ### ESM **&** CommonJS ready
 
-The package ships dual builds so you can **import** or **require** according to your tool‑chain:
-
 ```js
 // ESM
-import { GoogleOAuth2 } from "@randajan/oauth2-client/google";
+import createPulse, { Pulse } from "@randajan/pulse";
 
 // CommonJS
-const { GoogleOAuth2 } = require("@randajan/oauth2-client/google");
+const createPulse = require("@randajan/pulse");
 ```
 
 ---
 
-## Quick start — minimal Express example
+## Quick start
 
 ```js
-import express from "express";
-import { GoogleOAuth2 } from "@randajan/oauth2-client/google";
+import createPulse from "@randajan/pulse";
 
-const google = new GoogleOAuth2({
-  clientId:          process.env.GOOGLE_CLIENT_ID,
-  clientSecret:      process.env.GOOGLE_CLIENT_SECRET,
-  redirectUri:       "http://localhost:3999/oauth/exit",     // common backend route
-  landingUri:        "http://localhost:3000",                // front‑end OK screen (default)
-  fallbackUri:       "http://localhost:3000/login/error",    // front‑end error screen
-  scopes:            ["drive"],                              // extra scopes
-  isOffline:         true,                                   // ask for refresh_token
-  onAuth: async (account, context) => {
-    // first time we see this user
-    console.log("new account", await account.uid());
-    // store tokens somewhere safe …
+const pulse = createPulse({
+  interval: 1000,                // 1 second
+  onPulse: meta => {
+    console.log("tick", meta.runtime, "ms");
   },
-  onRenew: async account => {
-    // Google issued fresh tokens
-    console.log("tokens renewed for", account);
+  onError: err => console.error("Pulse error:", err),
+  autoStart: true               // start immediately
+});
+
+// Later…
+setTimeout(() => pulse.stop(), 10_000);
+```
+
+Every time **onPulse** runs it receives a fresh metadata object:
+
+```ts
+interface PulseMeta {
+  readonly started:  Date;
+  readonly runtime:  number;            // ms since started
+  readonly warnings: string[];
+  warn(w: string | Error): void;        // push warning
+}
+```
+
+---
+
+## `createPulse(options)` — options reference
+
+| Option      | Type       | Required | Default            | Description                                                        |
+| ----------- | ---------- | -------- | ------------------ | ------------------------------------------------------------------ |
+| `onPulse`   | `function` | ✔︎       | —                  | Async/sync callback executed on each pulse. Receives `PulseMeta`.  |
+| `interval`  | `number`   | ✔︎       | —                  | Period in ms. Min **50 ms**, max **2 147 483 647 ms** (\~24 days). |
+| `offset`    | `number`   |          | `0`                | Fixed shift applied to every pulse (0 ≤ offset < interval).        |
+| `getNow`    | `function` |          | `() => Date.now()` | Custom clock—handy for deterministic tests or time travel.         |
+| `onError`   | `function` |          | `() => {}`         | Called when `onPulse` throws or rejects.                           |
+| `autoStart` | `boolean`  |          | `false`            | If `true`, the scheduler starts right after construction.          |
+
+---
+
+## API
+
+| Member                 | Returns   | Description                                          |
+| ---------------------- | --------- | ---------------------------------------------------- |
+| `createPulse(options)` | `Pulse`   | Convenience wrapper around `new Pulse(options)`.     |
+| `new Pulse(options)`   | `Pulse`   | Class constructor when you prefer `new`.             |
+| `pulse.start()`        | `boolean` | Starts the loop; returns `false` if already running. |
+| `pulse.stop()`         | `boolean` | Stops the loop; returns `false` if already stopped.  |
+| `pulse.state`          | `boolean` | `true` = running, `false` = stopped.                 |
+| `pulse.interval`       | `number`  | Interval in ms (read‑only).                          |
+| `pulse.offset`         | `number`  | Offset in ms (read‑only).                            |
+
+---
+
+## Why not `setInterval`?
+
+`setInterval` drifts: extra work inside the callback pushes the next tick further, eventually desynchronising your schedule. **Pulse** recalculates the next edge *after* each run and keeps the loop tightly aligned to the original wall‑clock grid.
+
+---
+
+## Recipes
+
+### Long delays (> 24 days)
+
+JavaScript timers accept at most **2 147 483 647 ms**. To wait longer, chain pulses:
+
+```js
+createPulse({
+  interval: 2_147_483_647,
+  onPulse: async meta => {
+    if (stillWaiting()) return;   // keep sleeping…
+    // …real logic here
   },
-  extra:{
-    //will be passed to new google.auth.OAuth2(...)
-  }
+  autoStart: true
 });
-
-const app = express();
-
-app.get("/oauth/init", (req, res) => {
-  const redirect = google.getInitAuthURL(req.query.landingUri);
-  res.redirect(redirect);
-});
-
-app.get("/oauth/exit", async (req, res) => {
-  const redirect = await google.getExitAuthURL(req.query.code, req.query.state);
-  res.redirect(redirect);           // back to front‑end
-});
-
-app.listen(3999);
 ```
 
----
-
-## Shared `options`
-
-Every concrete OAuth2 client (Google, Microsoft …​) accepts the same constructor options so you can swap providers without refactoring:
-
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `clientId` | `string` | ✔︎ | OAuth client ID issued by the provider |
-| `clientSecret` | `string` | ✔︎ | OAuth client secret |
-| `redirectUri` | `string (URL)` | ✔︎ | Back‑end endpoint that receives `code` from the provider |
-| `fallbackUri` | `string (URL)` | ✔︎ | Where to send the user when *anything* goes wrong. Error errorCode & errorMessage are appended as query params |
-| `landingUri` | `string (URL)` |   | Default front‑end page after successful login (may be overridden per request) |
-| `scopes` | `string \| string[]` |   | Extra scopes. Google is always invoked with `openid userinfo.profile userinfo.email` |
-| `isOffline` | `boolean` |   | When `true` requests `access_type=offline` so a `refresh_token` is issued |
-| `onAuth` | `(account) => Promise<string[] \| void>` | ✔︎ | Called once after new account is created. Return uri (string) for custom redirect |
-| `onRenew` | `(account) => void` | ✔︎ | Called whenever the access‑token is automatically refreshed |
-| `extra` | `object` |   | Arbitrary options forwarded to the underlying SDK |
-
----
-
-## Google client
-
-### Import path
-
-```js
-import { GoogleOAuth2 } from "@randajan/oauth2-client/google";
-```
-
-### Class **`GoogleOAuth2`**
-
-| Member | Returns | Description |
-|--------|---------|-------------|
-| `constructor(options)` | `GoogleOAuth2` | Creates a new client. See **options** above |
-| `getInitAuthURL(landingUri?, scopes?, generateOptions?)` | `string` | Generates the consent‑screen URL. Parameters override the defaults from the constructor |
-| `getExitAuthURL({code, state}, context)` | `Promise<string>` | Exchanges `code` for tokens, triggers `onAuth`, then returns a redirect URL (either `landingUri` or a new **init** URL if more scopes are needed). Context will be passed as second argument to `onAuth` trait |
-| `account(credentials)` | `GoogleAccount` | Converts raw token `credentials` into a handy account object |
-
-### Class **`GoogleAccount`**
-
-| Member | Returns | Description |
-|--------|---------|-------------|
-| **Property** `auth` | `google.auth.OAuth2` | *Raw* `google-auth-library` instance. Use it with any `googleapis` service |
-| `uid()` | `Promise<string>` | Returns a stable user‑id (`google:{userId}`) |
-| `profile()` | `Promise<google.oauth2#Userinfo>` | Shorthand for `GET /oauth2/v2/userinfo` |
-| `tokens()` | `Promise<{ access_token, refresh_token, expiry_date, … }>` | Current token set (auto‑refreshes if needed) |
-| `scopes()` | `Promise<string[]>` | Scopes granted to the current access_token |
-
----
-
-## Utility tool
-
-### `extendURL(url, query): string`
-
-```js
-import { extendURL } from "@randajan/oauth2-client";
-extendURL("https://example.com", { foo: 1, bar: 2 });
-// → "https://example.com/?foo=1&bar=2"
-```
-
-A tiny helper that appends query parameters while keeping the rest of the URL intact.
 
 ---
 
 ## License
 
 MIT © [randajan](https://github.com/randajan)
+

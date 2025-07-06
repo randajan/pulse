@@ -5,7 +5,7 @@ const {isBuild } = argv;
 slib(
     isBuild,
     {
-        mode:"web",
+        mode:"node",
         demo:{
             loader:{
                 ".json":"text"
