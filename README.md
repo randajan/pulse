@@ -60,12 +60,15 @@ interface PulseMeta {
 
 | Option      | Type       | Required | Default            | Description                                                        |
 | ----------- | ---------- | -------- | ------------------ | ------------------------------------------------------------------ |
-| `onPulse`   | `function` | ✔︎       | —                  | Async/sync callback executed on each pulse. Receives `PulseMeta`.  |
-| `interval`  | `number`   | ✔︎       | —                  | Period in ms. Min **50 ms**, max **2 147 483 647 ms** (\~24 days). |
+| `interval`  | `number`   | ✔︎       | —                  | Period in ms. Min **10 ms**, max **2 147 483 647 ms** (\~24 days). |
 | `offset`    | `number`   |          | `0`                | Fixed shift applied to every pulse (0 ≤ offset < interval).        |
 | `getNow`    | `function` |          | `() => Date.now()` | Custom clock—handy for deterministic tests or time travel.         |
-| `onError`   | `function` |          | `() => {}`         | Called when `onPulse` throws or rejects.                           |
 | `autoStart` | `boolean`  |          | `false`            | If `true`, the scheduler starts right after construction.          |
+| `noMeta` | `boolean`  |          | `false`            | If `false`, the scheduler creates metadata `PuleMeta` at runtime        |
+| `onPulse`   | `function` | ✔︎       | —                  | Async/sync callback executed on each pulse. Receives `PulseMeta`.  |
+| `onError`   | `function` |          | `() => {}`         | Called when `onPulse` throws or rejects.                           |
+| `afterPulse`   | `function` |        | `() => {}`        | Async/sync callback executed after each pulse even if the onPulse raises an error. Receives `PulseMeta`.  |
+
 
 ---
 

@@ -10,12 +10,12 @@ import { valid, validRange } from "./tools";
  * @property {number} runtime   Milliseconds elapsed since `started`.
  * @property {(warning: string|Error) => void} warn  Push a warning into the internal list.
  */
-const createMetaData = _ => {
+const createMetaData = (getNow) => {
     const p = {};
     const w = [];
-    solid(p, "started", new Date());
+    solid(p, "started", getNow());
     virtual(p, "warnings", _ => [...w]);
-    virtual(p, "runtime", _ => Date.now() - p.started.getTime());
+    virtual(p, "runtime", _ => (p.ended ? p.ended : getNow()) - p.started);
     solid(p, "warn", warning => w.push(warning), false);
     return p;
 }
@@ -54,11 +54,13 @@ export class Pulse {
         }
 
         const onPulse = valid("function", options.onPulse, true, "options.onPulse");
-        const interval = validRange(50, 2_147_483_647, options.interval, true, "options.interval");
+        const interval = validRange(10, 2_147_483_647, options.interval, true, "options.interval");
         const offset = (validRange(0, interval, options.offset, false, "options.offset") || 0);
         const getNow = valid("function", options.getNow, false, "options.getNow") || (_ => Date.now());
         const onError = valid("function", options.onError, false, "options.onError") || blankFn;
+        const afterPulse = valid("function", options.afterPulse, false, "options.afterPulse") || blankFn;
         const autoStart = valid("boolean", options.autoStart, false, "options.autoStart") || false;
+        const noMeta = valid("boolean", options.noMeta, false, "option.noMeta") || false;
 
         _p.plan = async _ => {
             if (!_p.state || _p.metaData) { return; }
@@ -69,11 +71,31 @@ export class Pulse {
 
         _p.run = async _ => {
             if (!_p.state || _p.metaData) { return; }
-            _p.metaData = createMetaData();
-            try { await onPulse(_p.metaData); }
-            catch (err) { onError(err); }
-            delete _p.metaData;
-            _p.plan();
+
+            const md = _p.metaData = noMeta ? undefined : createMetaData(getNow);
+            let error;
+
+            try {
+                const result = await onPulse(md);
+                if (md) { solid(md, "result", result); }
+            }
+            catch (err) {
+                error = err;
+                if (md) { solid(md, "error", err); }
+            }
+
+            if (md) { solid(md, "ended", getNow()); }
+            if (error) { onError(error, md); }
+
+            try {
+                await afterPulse(md);
+                delete _p.metaData;
+                _p.plan();
+            }
+            catch(err) {
+                _p.state = false;
+                throw err;
+            }
         }
 
         virtual(this, "state", _ => _p.state);
