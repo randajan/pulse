@@ -1,4 +1,4 @@
-import { solid, solids, virtual } from "@randajan/props";
+import { solid, solids, virtual, virtuals } from "@randajan/props";
 import { blankFn, vault } from "./const";
 import { valid, validRange } from "./tools";
 
@@ -10,9 +10,10 @@ import { valid, validRange } from "./tools";
  * @property {number} runtime   Milliseconds elapsed since `started`.
  * @property {(warning: string|Error) => void} warn  Push a warning into the internal list.
  */
-const createMetaData = (getNow) => {
+const createMetaData = (id, getNow) => {
     const p = {};
     const w = [];
+    solid(p, "id", id);
     solid(p, "started", getNow());
     virtual(p, "warnings", _ => [...w]);
     virtual(p, "runtime", _ => (p.ended ? p.ended : getNow()) - p.started);
@@ -51,19 +52,30 @@ export class Pulse {
     constructor(options = {}) {
         const _p = {
             state: false,
+            nextId:0
         }
 
-        const onPulse = valid("function", options.onPulse, true, "options.onPulse");
+        const getNow = valid("function", options.getNow, false, "options.getNow") || (_ => Date.now());
+
         const interval = validRange(10, 2_147_483_647, options.interval, true, "options.interval");
         const offset = (validRange(0, interval, options.offset, false, "options.offset") || 0);
-        const getNow = valid("function", options.getNow, false, "options.getNow") || (_ => Date.now());
+
+        const onPulse = valid("function", options.onPulse, true, "options.onPulse");
+        _p.onStart = valid("function", options.onStart, false, "options.onStart") || blankFn;
+        _p.onStop = valid("function", options.onStop, false, "options.onStop") || blankFn;
+        
         const onError = valid("function", options.onError, false, "options.onError") || blankFn;
+        
         const afterPulse = valid("function", options.afterPulse, false, "options.afterPulse") || blankFn;
         const autoStart = valid("boolean", options.autoStart, false, "options.autoStart") || false;
         const noMeta = valid("boolean", options.noMeta, false, "option.noMeta") || false;
 
-        _p.plan = async _ => {
-            if (!_p.state || _p.metaData) { return; }
+        _p.reset = _=>{
+            _p.nextId = 0;
+        }
+
+        _p.plan = _ => {
+            if (!_p.state || _p.metaData != null) { return; }
             const now = getNow();
             const runIn = (interval - now % interval) + offset;
             _p.timeoutId = setTimeout(_p.run, runIn);
@@ -72,33 +84,45 @@ export class Pulse {
         _p.run = async _ => {
             if (!_p.state || _p.metaData) { return; }
 
-            const md = _p.metaData = noMeta ? undefined : createMetaData(getNow);
-            let error;
+            const id = _p.nextId++;
+            const md = _p.metaData = noMeta ? id : createMetaData(id, getNow);
+            let errA, errB;
 
             try {
-                const result = await onPulse(md);
-                if (md) { solid(md, "result", result); }
+                const result = await onPulse(this, md);
+                if (!noMeta) { solid(md, "result", result); }
             }
             catch (err) {
-                error = err;
-                if (md) { solid(md, "error", err); }
+                errA = err;
+                if (!noMeta) { solid(md, "error", errA); }
             }
 
-            if (md) { solid(md, "ended", getNow()); }
-            if (error) { onError(error, md); }
-
-            try {
-                await afterPulse(md);
-                delete _p.metaData;
-                _p.plan();
+            if (noMeta) {
+                onError(this, errA, md);
+            } else {
+                solid(md, "ended", getNow());
+                onError(this, md);
             }
-            catch(err) {
+
+            try { await afterPulse(this, md); }
+            catch(err) { errB = err; }
+
+            _p.last = md;
+            delete _p.metaData;
+
+            if (errB) {
                 _p.state = false;
-                throw err;
+                throw errB;
             }
+            
+            _p.plan();
         }
 
-        virtual(this, "state", _ => _p.state);
+        virtuals(this, {
+            state:_=>_p.state,
+            last:_=>_p.last
+        });
+
         solids(this, {
             interval,
             offset
@@ -114,10 +138,12 @@ export class Pulse {
      * Start the pulse loop (no-op if already running).
      * @returns {boolean} `true` if it started now, `false` if it was already running.
      */
-    start() {
+    start(reset=false) {
         const { state } = this;
         if (state) { return false; }
         const _p = vault.get(this);
+        _p.onStart(this);
+        if (reset) { _p.reset(); }
         _p.state = true;
         _p.plan();
         return true;
@@ -127,13 +153,25 @@ export class Pulse {
      * Stop the pulse loop (no-op if already stopped).
      * @returns {boolean} `true` if it stopped now, `false` if it was already stopped.
      */
-    stop() {
+    stop(reset=false) {
         const { state } = this;
         if (!state) { return false; }
         const _p = vault.get(this);
-        _p.state = false;
         clearTimeout(_p.timeoutId);
+        _p.state = false;
+        if (reset) { _p.reset(); }
+        _p.onStop(this);
         return true;
+    }
+
+    reset() {
+        vault.get(this).reset();
+        return true;
+    }
+
+    restart(reset=false) {
+        this.stop(reset);
+        return this.start(reset);
     }
 
 

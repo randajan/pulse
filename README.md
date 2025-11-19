@@ -67,6 +67,8 @@ interface PulseMeta {
 | `noMeta` | `boolean`  |          | `false`            | If `false`, the scheduler creates metadata `PuleMeta` at runtime        |
 | `onPulse`   | `function` | ✔︎       | —                  | Async/sync callback executed on each pulse. Receives `PulseMeta`.  |
 | `onError`   | `function` |          | `() => {}`         | Called when `onPulse` throws or rejects.                           |
+| `onStart`   | `function` |          | `() => {}`         | Called right before pulse starts.                          |
+| `onStop`   | `function` |          | `() => {}`         | Called right after pulse stops.                            |
 | `afterPulse`   | `function` |        | `() => {}`        | Async/sync callback executed after each pulse even if the onPulse raises an error. Receives `PulseMeta`.  |
 
 
@@ -80,7 +82,10 @@ interface PulseMeta {
 | `new Pulse(options)`   | `Pulse`   | Class constructor when you prefer `new`.             |
 | `pulse.start()`        | `boolean` | Starts the loop; returns `false` if already running. |
 | `pulse.stop()`         | `boolean` | Stops the loop; returns `false` if already stopped.  |
-| `pulse.state`          | `boolean` | `true` = running, `false` = stopped.                 |
+| `pulse.restart()`         | `boolean` | Call pulse.stop() and then pulse.start() |
+| `pulse.reset()`         | `boolean` | Resets nextId counter |
+| `pulse.state`          | `boolean` | `true` = running, `false` = stopped (read-only)                 |
+| `pulse.nextId`          | `number` | next pulse id (read-only).              |
 | `pulse.interval`       | `number`  | Interval in ms (read‑only).                          |
 | `pulse.offset`         | `number`  | Offset in ms (read‑only).                            |
 

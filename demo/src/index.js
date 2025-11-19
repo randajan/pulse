@@ -4,20 +4,26 @@ import createPulse from "../../dist/esm/index.mjs";
 
 createPulse({
     autoStart:true,
-    onPulse:async (meta)=>{
-        const { started, runtime, warnings, warn } = meta;
-        warn("AAAA");
-        //throw new Error("wtf");
+    //noMeta:true,
+    onPulse:async (p, meta)=>{
+        const { id, started, runtime, warnings, warn } = meta;
+        //warn("AAAA");
+        throw new Error("wtf");
         //await new Promise(res=>setTimeout(res, Math.random()*1000));
+        
         return "bla";
     },
-    interval:100,
+    interval:1000,
     // offset:1000,
-    onError:(err)=>{ console.error(err); },
+    //onError:(p, error)=>{ console.error(error); },
     getNow:()=>Date.now(),
-    afterPulse:meta=>{
-        console.log("RES");
-        console.log("effect", new Date(meta.started), {...meta});
+    afterPulse:(p, meta)=>{
+        const { id, started, runtime, warnings, warn } = meta;
+        console.log("RES", meta);
+        if (id >= 5) { p.reset(); }
+        //console.log("effect", new Date(meta.started), {...meta});
     },
+    onStart:()=>{ console.log("start"); },
+    onStop:()=>{ console.log("stop"); }
     //noMeta:true
 });
