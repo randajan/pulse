@@ -86,10 +86,10 @@ export class Pulse {
 
             const id = _p.nextId++;
             const md = _p.metaData = noMeta ? id : createMetaData(id, getNow);
-            let errA, errB;
+            let errA, errB, result;
 
             try {
-                const result = await onPulse(this, md);
+                result = await onPulse(this, md);
                 if (!noMeta) { solid(md, "result", result); }
             }
             catch (err) {
@@ -97,20 +97,20 @@ export class Pulse {
                 if (!noMeta) { solid(md, "error", errA); }
             }
 
-            if (noMeta) {
-                onError(this, errA, md);
-            } else {
-                solid(md, "ended", getNow());
-                onError(this, md);
+            if (!noMeta) { solid(md, "ended", getNow()); }
+
+            if (errA != null) {
+                if (noMeta) { onError(this, errA, md); }
+                else { onError(this, md); }
             }
 
             try { await afterPulse(this, md); }
             catch(err) { errB = err; }
 
-            _p.last = md;
+            _p.last = noMeta ? result : md;
             delete _p.metaData;
 
-            if (errB) {
+            if (errB != null) {
                 _p.state = false;
                 throw errB;
             }
