@@ -12,6 +12,7 @@ export const createPulse = (options = {}) => new Pulse(options);
 /**
  * Process exit helper – stops all pending pulses.
  */
+
 export const stopAllPulses = ()=>{
     for (const [pulse, _pulse] of _pulses.entries()) {
         pulse.stop();
