@@ -1,6 +1,6 @@
 
 
 
-export const vault = new WeakMap();
+export const _pulses = new Map();
 
 export const blankFn = ()=>{};

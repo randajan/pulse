@@ -1,6 +1,6 @@
 
 import { info, log } from "@randajan/simple-lib/node";
-import createPulse from "../../dist/esm/index.mjs";
+import createPulse, { stopAllPulses } from "../../dist/esm/index.mjs";
 
 const pulse = createPulse({
     autoStart:true,
@@ -34,4 +34,4 @@ createPulse({
     onPulse:_=>console.log("check", pulse.last),
     onError:(_, err)=>console.warn("err", err),
     noMeta:true
-})
+});

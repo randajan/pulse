@@ -1,5 +1,6 @@
-import { createPulse, Pulse } from "./Pulse";
+import { Pulse } from "./Pulse";
+import { createPulse, stopAllPulses } from "./static";
 
 export default createPulse;
 
-export { createPulse, Pulse }
+export { createPulse, stopAllPulses, Pulse }
