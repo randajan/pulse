@@ -1,5 +1,5 @@
 import { _pulses } from "./const";
-import { Pulse } from "../dist/esm/index.mjs";
+import { Pulse } from "./Pulse.js";
 
 
 /**

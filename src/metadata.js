@@ -1,5 +1,4 @@
 import { solid, virtual } from "@randajan/props";
-import { Pulse } from "../dist/esm/index.mjs";
 
 
 /**

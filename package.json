@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@randajan/simple-lib": "^3.2.0"
+    "@randajan/simple-lib": "^3.3.0"
   },
   "files": [
     "dist",

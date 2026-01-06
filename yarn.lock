@@ -132,10 +132,10 @@
   resolved "https://registry.yarnpkg.com/@randajan/props/-/props-0.1.4.tgz#af4fa4327d69e1cbfd281df0c2e546cf6761f66d"
   integrity sha512-F0qkf+s2p6SEO5nkHNCAL34/m39CAPF8j0+isx7TazvBHk8BXoCQxLEM5f6PL3G6R1TCSFVkqerI4T017yTQBA==
 
-"@randajan/simple-lib@^3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@randajan/simple-lib/-/simple-lib-3.2.0.tgz#f34e9774724aea8f4ee2d6a64875427638435d19"
-  integrity sha512-WDd8ozZCIkPqfIwh6ZWgea7mCG20muSQ8ZR9Vg/ugYzbw1XnuHXHQ6Gz3RO0VZBilAaAtWsUViWPH9YPVq2cjQ==
+"@randajan/simple-lib@^3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@randajan/simple-lib/-/simple-lib-3.3.0.tgz#8005fde3d48583f8e9f6f9984c98416046d0439c"
+  integrity sha512-larINB1cyuej5+gG/LrUaIEFxHHvYUOY/I49jUpuweCIUfFVTDUHYkN49LblXwrRzp89IDf6sCGf+5or9alP7w==
   dependencies:
     app-root-path "^3.1.0"
     chalk "^5.3.0"
