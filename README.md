@@ -88,6 +88,7 @@ interface PulseMeta {
 | `pulse.nextId`          | `number` | next pulse id (read-only).              |
 | `pulse.interval`       | `number`  | Interval in ms (read‑only).                          |
 | `pulse.offset`         | `number`  | Offset in ms (read‑only).                            |
+| `pulse.countdown`         | `number`  | number of ms that remains to the next pulse        |
 | `pulse.last`         | `number`  | if noMeta=true there will be last result, else there will be last metadata         |
 
 ---

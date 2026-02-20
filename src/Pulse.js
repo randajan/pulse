@@ -40,9 +40,7 @@ export class Pulse {
 
         _p.plan = _ => {
             if (!_p.state || _p.metaData != null) { return; }
-            const now = getNow();
-            const runIn = (interval - now % interval) + offset;
-            _p.timeoutId = setTimeout(_p.run, runIn);
+            _p.timeoutId = setTimeout(_p.run, this.countdown);
         }
 
         _p.run = async _ => {
@@ -84,7 +82,8 @@ export class Pulse {
 
         virtuals(this, {
             state:_=>_p.state,
-            last:_=>_p.last
+            last:_=>_p.last,
+            countdown:_=>((interval - getNow() % interval) + offset)
         });
 
         solids(this, {
