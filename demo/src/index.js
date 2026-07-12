@@ -5,33 +5,34 @@ import createPulse, { stopAllPulses } from "../../dist/esm/index.mjs";
 const pulse = createPulse({
     autoStart:true,
     //noMeta:true,
+    maxRuns:6,
     onPulse:async (p, meta)=>{
         const { id, started, runtime, warnings, warn } = meta;
-        //warn("AAAA");
-        throw new Error("wtf");
-        //await new Promise(res=>setTimeout(res, Math.random()*1000));
-        
+        //throw new Error("wtf");
+        await new Promise(res=>setTimeout(res, Math.random()*1000));
         return Math.random();
     },
-    interval:1000,
-    // offset:1000,
+    align:false,
+    interval:500,
+    offset:500,
     onError:(p, error)=>{ console.error(error); },
     getNow:()=>Date.now(),
-    afterPulse:(p, id)=>{
-        //const { id, started, runtime, warnings, warn } = meta;
-        console.log("RES", id);
+    afterPulse:(p, meta)=>{
+        const { id, started, runtime, warnings, warn, lateBy } = meta;
+        console.log("FIRE", id, lateBy);
         if (id >= 5) { p.reset(); }
         //console.log("effect", new Date(meta.started), {...meta});
     },
     onStart:()=>{ console.log("start"); },
-    onStop:()=>{ console.log("stop"); },
-    noMeta:true
+    onStop:()=>{ console.log("stop"); }, 
+    //noMeta:true
 });
 
 createPulse({
-    autoStart:true,
-    interval:3000,
-    onPulse:_=>console.log("check", pulse.last),
+    //autoStart:true,
+    align:false,
+    interval:500,
+    onPulse:_=>console.log("check", pulse.countdown, (new Date(Date.now()+pulse.potential)).toLocaleTimeString()),
     onError:(_, err)=>console.warn("err", err),
     noMeta:true
 });

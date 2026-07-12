@@ -12,6 +12,9 @@
       "require": "./dist/cjs/index.cjs"
     }
   },
+  "scripts": {
+    "build": "node index.js isBuild=true"
+  },
   "license": "MIT",
   "devDependencies": {
     "@randajan/simple-lib": "^3.3.0"
