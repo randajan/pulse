@@ -41,14 +41,14 @@ const getErrType = (err)=>{
     return "unknown";
 }
 
-export const handleError = async (error, onError)=>{
+export const handleError = async (pulse, error, onError)=>{
 
     const type = getErrType(error);
 
     if (!onError) {
         console.error(`[pulse] ${type} error:`, error);
     } else {
-        try { await onError(type, error); }
+        try { await onError(pulse, type, error); }
         catch (e2) { console.error(`[pulse] options.onError('${type}') failed: `, e2); }
     }
 }

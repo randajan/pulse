@@ -52,7 +52,7 @@ export class PulseSession {
         } catch (err) {
             // A failed start should not leave a live session behind.
             this.#state = false;
-            this.#ctrl.abort();
+            this.#ctrl.abort(err);
             throw new PulseStartError(err);
         }
 
@@ -68,7 +68,7 @@ export class PulseSession {
         clearTimeout(this.#timeoutId);
         this.#fireAt = undefined;
         this.#current = null;
-        this.#ctrl.abort();
+        this.#ctrl.abort(reason);
 
         if (reason != null) { this.#handleError(reason); }
 
@@ -78,7 +78,7 @@ export class PulseSession {
         return true;
     }
 
-    #handleError(error) { return handleError(error, this.#opt.onError); }
+    #handleError(error) { return handleError(this.pulse, error, this.#opt.onError); }
 
     // Even a temporarily broken clock/configuration must not permanently stall scheduling.
     #schedule(isInit) {

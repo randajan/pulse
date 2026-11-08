@@ -9,7 +9,6 @@ export class Pulse {
     #nextId = 0;
     #last;
 
-    /** @param {PulseOptions} [options={}] */
     constructor(options = {}) {
         this.#opt = formatOptions(options);
         if (this.#opt.autoStart) { this.start(); }
@@ -37,7 +36,7 @@ export class Pulse {
         return rest === 0 ? interval : interval - rest;
     }
 
-    #handleError(error) { return handleError(error, this.#opt.onError); }
+    #handleError(error) { return handleError(this, error, this.#opt.onError); }
 
     #consumeNextId = () => this.#nextId++;
 
@@ -77,5 +76,9 @@ export class Pulse {
     toJSON() {
         const { interval, offset, align, state, current, last, countdown, potential, nextAt, nextId } = this;
         return { interval, offset, align, state, current, last, countdown, potential, nextAt, nextId };
+    }
+
+    reset() {
+        throw new Error("[pulse] reset() is obsolete");
     }
 }

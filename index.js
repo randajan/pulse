@@ -15,7 +15,7 @@ slib(
             entries:[
                 "index.js",
             ],
-            static:[ "types" ]
+            statics:[ "types" ]
         },
     }
 );

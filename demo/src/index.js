@@ -186,7 +186,7 @@ test('onPulse failure reports PulseRuntimeError and next pulse continues', async
             if (cycle.id === 0) { throw failure; }
             return 'recovered';
         },
-        onError: (type, error) => { errors.push({ type, error }); return slowErrorHandler; },
+        onError: (pulse, type, error) => { errors.push({ type, error }); return slowErrorHandler; },
     }));
 
     pulse.start();
@@ -215,7 +215,7 @@ test('onStart failure rejects the start, aborts session and reports the cause', 
     let session;
     const pulse = new Pulse(options({
         onStart: s => { session = s; throw failure; },
-        onError: (type, error) => errors.push({ type, error }),
+        onError: (pulse, type, error) => errors.push({ type, error }),
     }));
 
     assert.throws(() => pulse.start(), err =>
@@ -237,7 +237,7 @@ test('onStop failure cannot prevent stopping the scheduler', t => {
     const pulse = new Pulse(options({
         onStart: s => { session = s; },
         onStop: () => { throw failure; },
-        onError: (type, error) => errors.push({ type, error }),
+        onError: (pulse, type, error) => errors.push({ type, error }),
     }));
 
     pulse.start();
@@ -255,7 +255,7 @@ test('failed scheduling stops the session and reports PulseScheduleError', t => 
     const failure = new Error('cannot plan');
     const errors = [];
     const pulse = new Pulse(options({
-        onError: (type, error) => errors.push({ type, error }),
+        onError: (pulse, type, error) => errors.push({ type, error }),
     }));
 
     pulse.calculatePotential = () => { throw failure; };

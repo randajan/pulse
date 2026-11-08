@@ -3,22 +3,6 @@ import { valid, validateGetNow, validRange } from "./tools";
 
 const blankFn = ()=>{};
 
-/**
- * Configuration object for {@link Pulse}.
- * @typedef {Object} PulseOptions
- * @property {(pulse: import("../Pulse").Pulse, meta: import("../old/metadata").PulseMeta|number) => (*|Promise<*>)} onPulse **required** – user callback invoked on every pulse.
- * @property {boolean} align **required** – align to wall-clock interval edges when true, run relatively when false.
- * @property {number} interval **required** – period length in ms (10 – 2 147 483 647).
- * @property {number} [offset=0] Timing offset. Range and meaning depend on `align` and `runOnStart`.
- * @property {boolean} [runOnStart=false] Schedule the first pulse immediately on start.
- * @property {() => number} [getNow=() => Date.now()] Custom time source, useful for tests or time travel.
- * @property {boolean} [autoStart=false] If true, the loop starts immediately after construction.
- * @property {boolean} [noMeta=false] If true, callbacks receive the numeric pulse id instead of `PulseMeta`.
- * @property {(pulse: import("../Pulse").Pulse) => void} [onStart=blankFn] Called right before the pulse loop starts.
- * @property {(pulse: import("../Pulse").Pulse) => void} [onStop=blankFn] Called right after the pulse loop stops.
- * @property {Function} [onError=blankFn] Error handler for exceptions or rejected `onPulse` promises.
- * @property {(pulse: import("../Pulse").Pulse, meta: import("../old/metadata").PulseMeta|number) => (void|Promise<void>)} [afterPulse=blankFn] Callback executed after every pulse.
- */
 export const formatOptions = (options) => {
     const o = {};
 
