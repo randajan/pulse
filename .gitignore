@@ -2,3 +2,4 @@
 dist
 
 .env.json
+.vscode/.bash_history
